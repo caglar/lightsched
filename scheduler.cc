@@ -26,8 +26,8 @@
 #include <signal.h>
 #include <sys/time.h>
 
-/* 
- * I'll make this global so that the alarm handler
+/*
+ * I made this global so that the alarm handler
  * function can change the interval if necessary
  */
 struct itimerval it;
@@ -37,14 +37,13 @@ start_scheduler(void (*s_handler)(int), unsigned int stepsize, unsigned int dela
 {
   char buffer[BUFSIZ];
 
-  it.it_value.tv_sec     = delaytime;       /* start in 1 second      */
+  it.it_value.tv_sec     = delaytime;       /* start in 1 second */
   it.it_value.tv_usec    = 0;
   it.it_interval.tv_sec  = stepsize;       /* repeat every 5 seconds */
   it.it_interval.tv_usec = 0;
 
   if ( s_handler != NULL ) {
-    signal(SIGALRM, s_handler); /* Install the handler    */
+    signal(SIGALRM, s_handler); /* Install the handler */
   }
-
   setitimer(ITIMER_REAL, &it, NULL);/* turn on interval timer */
 }

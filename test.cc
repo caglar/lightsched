@@ -23,7 +23,7 @@
 void test(int sig)
 {
   static unsigned count = 0;
-  printf("Alarm number %5u at %d\n", ++count, time(0));
+  printf("Alarm number %5u at %lu\n", ++count, time(0));
 }
 
 int
