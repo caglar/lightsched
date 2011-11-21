@@ -16,23 +16,59 @@
  * =====================================================================================
  */
 
-#include "scheduler.h"
-#include <stdio.h>
+#include <cstdio>
+#include <cstdlib>
 #include <ctime>
+#include <cstring>
+#include <unistd.h>
 
-void test(int sig)
+#include <signal.h>
+#include <errno.h>
+#include <pthread.h>
+#include <semaphore.h>
+
+#include "scheduler.h"
+
+static sighandler_t __handler = NULL;
+static sem_t __semAlarm;
+
+static void* waitForAlarm(void *)
 {
-  static unsigned count = 0;
-  printf("Alarm number %5u at %lu\n", ++count, time(0));
+  for (;;) {
+    printf("Inside thread %d\n", pthread_self());
+    sem_wait(&__semAlarm);
+  }
+  return NULL;
+}
+
+static void
+test_handler(int sig)
+{
+  if (sig == SIGALRM) {
+    static unsigned count = 0;
+    printf("Alarm number %5u at %lu\n", ++count, time(0));
+    alarm(0);
+  } else if (__handler)
+    __handler(sig);
 }
 
 int
 main()
 {
-  unsigned int step = 10;
+  unsigned int step = 2;
   unsigned int delay = 1;
-  start_scheduler(&test, step);
+  pthread_t thread;
+  if (pthread_create(&thread, NULL, waitForAlarm, NULL) != 0)
+  {
+    perror(strerror(errno));
+    return EXIT_FAILURE;
+  }
+  start_scheduler(&test_handler, step);
   printf("Started the scheduler\n");
-  for (;;){}
-  return 0;
+  for (;;) {
+    puts("A new stream\n");
+    sleep(1);
+  }
+  pthread_join(thread, NULL);
+  return EXIT_SUCCESS;
 }
