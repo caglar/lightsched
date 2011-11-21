@@ -36,8 +36,8 @@ static int count = 0;
 static void 
 aTestFuncCall()
 {
-    count++;
-    printf("Count is: %d", count);
+    count--;
+    printf("Count is: %d\n", count);
     sem_wait(&__semAlarm); // Lock the semaphore
 }
 
@@ -55,8 +55,8 @@ static void
 test_handler (int sig)
 {
   if (sig == SIGALRM) {
-    static unsigned count = 0;
-    printf("Alarm number %5u at %lu\n", ++count, time(0));
+    count++;
+    printf("Alarm number %5u at %lu\n", count, time(0));
     sem_post(&__semAlarm); //Unlock the semaphore
   } else if (__handler)
     __handler(sig);
@@ -76,6 +76,7 @@ main()
     perror(strerror(errno));
     return EXIT_FAILURE;
   }
+
   for (;;) { }
   pthread_join(thread, NULL);
   return EXIT_SUCCESS;

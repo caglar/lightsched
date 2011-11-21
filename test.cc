@@ -29,12 +29,14 @@
 
 static sighandler_t __handler = NULL;
 static sem_t __semAlarm;
+static unsigned count = 0;
 
 static void *
 waitForAlarm (void *)
 {
   for (;;) {
-    printf("Inside thread %lu\n", pthread_self());
+    count--;
+    printf("Inside thread %lu, %d\n", pthread_self(), count);
     sem_wait(&__semAlarm); // Lock the semaphore
   }
   return NULL;
@@ -44,7 +46,6 @@ static void
 test_handler (int sig)
 {
   if (sig == SIGALRM) {
-    static unsigned count = 0;
     printf("Alarm number %5u at %lu\n", ++count, time(0));
     sem_post(&__semAlarm); //Unlock the semaphore
   } else if (__handler)
