@@ -32,22 +32,23 @@
 static sighandler_t __handler = NULL;
 static sem_t __semAlarm;
 
-static void* waitForAlarm(void *)
+static void *
+waitForAlarm (void *)
 {
   for (;;) {
-    printf("Inside thread %d\n", pthread_self());
-    sem_wait(&__semAlarm);
+    printf("Inside thread %lu\n", pthread_self());
+    sem_wait(&__semAlarm); // Lock the semaphore
   }
   return NULL;
 }
 
 static void
-test_handler(int sig)
+test_handler (int sig)
 {
   if (sig == SIGALRM) {
     static unsigned count = 0;
     printf("Alarm number %5u at %lu\n", ++count, time(0));
-    alarm(0);
+    sem_post(&__semAlarm); //Unlock the semaphore
   } else if (__handler)
     __handler(sig);
 }
@@ -55,20 +56,18 @@ test_handler(int sig)
 int
 main()
 {
-  unsigned int step = 2;
+  unsigned int step = 3;
   unsigned int delay = 1;
   pthread_t thread;
+  start_scheduler(&test_handler, step);
+  printf("Started the scheduler\n");
+
   if (pthread_create(&thread, NULL, waitForAlarm, NULL) != 0)
   {
     perror(strerror(errno));
     return EXIT_FAILURE;
   }
-  start_scheduler(&test_handler, step);
-  printf("Started the scheduler\n");
-  for (;;) {
-    puts("A new stream\n");
-    sleep(1);
-  }
+  for (;;) { }
   pthread_join(thread, NULL);
   return EXIT_SUCCESS;
 }
