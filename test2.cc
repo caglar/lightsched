@@ -21,21 +21,32 @@
 #include <ctime>
 #include <cstring>
 #include <unistd.h>
+
 #include <signal.h>
 #include <errno.h>
 #include <pthread.h>
 #include <semaphore.h>
+
 #include "scheduler.h"
 
 static sighandler_t __handler = NULL;
 static sem_t __semAlarm;
+static int count = 0;
+
+static void 
+aTestFuncCall()
+{
+    count++;
+    printf("Count is: %d", count);
+    sem_wait(&__semAlarm); // Lock the semaphore
+}
 
 static void *
 waitForAlarm (void *)
 {
   for (;;) {
     printf("Inside thread %lu\n", pthread_self());
-    sem_wait(&__semAlarm); // Lock the semaphore
+    aTestFuncCall();
   }
   return NULL;
 }
@@ -59,6 +70,7 @@ main()
   pthread_t thread;
   start_scheduler(&test_handler, step);
   printf("Started the scheduler\n");
+
   if (pthread_create(&thread, NULL, waitForAlarm, NULL) != 0)
   {
     perror(strerror(errno));
